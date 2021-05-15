@@ -47,6 +47,7 @@ public class RssController {
     }
 
     @RequestMapping(method = RequestMethod.GET)
+    @ResponseBody
     Channel getRssList(@PathVariable String gallId) {
         Channel channel = new Channel("rss_2.0");
         ArticleList articleListRequest = new ArticleList(gallId);
