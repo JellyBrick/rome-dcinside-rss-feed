@@ -1,92 +1,89 @@
-package be.zvz.rssinside.api;
-
-import be.zvz.kotlininside.KotlinInside;
-import be.zvz.kotlininside.api.article.ArticleList;
-import be.zvz.kotlininside.http.DefaultHttpClient;
-import be.zvz.kotlininside.http.HttpException;
-import be.zvz.kotlininside.session.user.Anonymous;
-import com.rometools.rome.feed.rss.Channel;
-import com.rometools.rome.feed.rss.Item;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+package be.zvz.rssinside.api
+import be.zvz.kotlininside.KotlinInside
+import be.zvz.kotlininside.api.article.ArticleList
+import be.zvz.kotlininside.http.DefaultHttpClient
+import be.zvz.kotlininside.http.HttpException
+import be.zvz.kotlininside.session.user.Anonymous
+import com.rometools.rome.feed.rss.Channel
+import com.rometools.rome.feed.rss.Item
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.*
+import java.lang.RuntimeException
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.util.*
 
 @RestController
 @RequestMapping("/{gallId}/rss")
-public class RssController {
-    private final List<SimpleDateFormat> dateFormats = Arrays.asList(
-            new SimpleDateFormat("HH:mm"),
-            new SimpleDateFormat("y.MM.dd")
-    );
-    @NotNull
-    private Date tryParseDate(@NotNull final String dateString) {
-        for (final SimpleDateFormat dateFormat : dateFormats) {
-            try
-            {
-                return dateFormat.parse(dateString);
+class RssController @Autowired internal constructor() {
+    private val log = LoggerFactory.getLogger(RssController::class.java)
+    private val dateFormats = listOf(
+        SimpleDateFormat("HH:mm"),
+        SimpleDateFormat("y.MM.dd")
+    )
+
+    private fun tryParseDate(dateString: String): Date {
+        dateFormats.forEach { dateFormat ->
+            try {
+                return dateFormat.parse(dateString)
+            } catch (ignored: ParseException) {
             }
-            catch (ParseException ignored) {}
         }
-        return new Date();
+        return Date()
     }
 
-    @Autowired
-    RssController() {
-        KotlinInside.createInstance(new Anonymous(
-                "ㅇㅇ",
-                "1234"
-        ), new DefaultHttpClient());
-    }
-
-    @RequestMapping(method = RequestMethod.GET)
+    @RequestMapping(method = [RequestMethod.GET])
     @ResponseBody
-    Channel getRssList(@PathVariable String gallId) {
-        Channel channel = new Channel("rss_2.0");
-        ArticleList articleListRequest = new ArticleList(gallId);
-        try {
-            articleListRequest.request();
-        } catch (HttpException httpException) {
-            throw new GalleryNotFoundException(gallId);
-        }
-        ArticleList.GallInfo galleryInfo = articleListRequest.getGallInfo();
-        channel.setTitle(galleryInfo.getTitle());
-        channel.setGenerator(galleryInfo.getTitle());
-        channel.setLink("https://gall.dcinside.com/list.php?id=" + gallId);
-        Date postDate = new Date();
-        channel.setPubDate(postDate);
-
-        List<Item> items = new ArrayList<>();
-        List<ArticleList.GallList> articleList = articleListRequest.getGallList();
-
-        for (ArticleList.GallList articleInfo : articleList) {
-            Item item = new Item();
-            item.setTitle(articleInfo.getSubject());
-            if (!"".equals(articleInfo.getIp())) {
-                item.setAuthor(articleInfo.getName() + " (" + articleInfo.getIp() + ")");
-            } else {
-                item.setAuthor(articleInfo.getName());
+    fun getRssList(@PathVariable gallId: String): Channel {
+        log.info("getRssList")
+        val articleListRequest = ArticleList(gallId).apply {
+            try {
+                request()
+            } catch (httpException: HttpException) {
+                throw GalleryNotFoundException(gallId)
             }
-            item.setPubDate(tryParseDate(articleInfo.getDateTime()));
-            item.setLink("https://gall.dcinside.com/board/view/?id=" + gallId + "&no=" + articleInfo.getIdentifier());
-            items.add(item);
         }
-        channel.setItems(items);
-        return channel;
+
+        val galleryInfo = articleListRequest.getGallInfo()
+        val channel = Channel("rss_2.0")
+        channel.title = galleryInfo.title
+        channel.generator = galleryInfo.title
+        channel.link = "https://gall.dcinside.com/list.php?id=$gallId"
+        channel.pubDate = Date()
+
+        channel.items = mutableListOf<Item>().apply {
+            articleListRequest.getGallList().forEach { articleInfo ->
+                add(
+                    Item().apply {
+                        title = articleInfo.subject
+                        author = if ("" != articleInfo.ip) {
+                            "${articleInfo.name} (${articleInfo.ip})"
+                        } else {
+                            articleInfo.name
+                        }
+                        pubDate = tryParseDate(articleInfo.dateTime)
+                        link = "https://gall.dcinside.com/board/view/?id=$gallId&no=${articleInfo.identifier}"
+                    }
+                )
+            }
+        }
+        return channel
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    static class GalleryNotFoundException extends RuntimeException {
+    internal class GalleryNotFoundException(gallId: String) : RuntimeException("could not find gallery '$gallId'.")
 
-        public GalleryNotFoundException(String gallId) {
-            super("could not find gallery '" + gallId + "'.");
-        }
+    init {
+        log.info("init - KotlinInside")
+        KotlinInside.createInstance(
+            Anonymous(
+                "ㅇㅇ",
+                "1234"
+            ),
+            DefaultHttpClient(), true
+        )
+        log.info("done - KotlinInside")
     }
 }
