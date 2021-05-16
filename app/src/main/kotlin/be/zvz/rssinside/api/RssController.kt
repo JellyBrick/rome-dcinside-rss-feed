@@ -9,6 +9,7 @@ import com.rometools.rome.feed.rss.Item
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 import java.lang.RuntimeException
 import java.text.ParseException
@@ -34,8 +35,6 @@ class RssController @Autowired internal constructor() {
         return Date()
     }
 
-    @RequestMapping(method = [RequestMethod.GET])
-    @ResponseBody
     fun getRssList(@PathVariable gallId: String): Channel {
         val articleListRequest = ArticleList(gallId).apply {
             try {
@@ -72,6 +71,18 @@ class RssController @Autowired internal constructor() {
         return channel
     }
 
+    @GetMapping(path = ["/json"], produces = [MediaType.APPLICATION_JSON_VALUE])
+    @ResponseBody
+    fun getRssListJson(@PathVariable gallId: String): Channel {
+        return getRssList(gallId)
+    }
+
+    @GetMapping(produces = [MediaType.APPLICATION_XML_VALUE])
+    @ResponseBody
+    fun getRssListXml(@PathVariable gallId: String): Channel {
+        return getRssList(gallId)
+    }
+
     @ResponseStatus(HttpStatus.NOT_FOUND)
     internal class GalleryNotFoundException(gallId: String) : RuntimeException("could not find gallery '$gallId'.")
 
@@ -84,6 +95,9 @@ class RssController @Autowired internal constructor() {
             ),
             DefaultHttpClient(), true
         )
+        dateFormats.forEach {
+            it.isLenient = false
+        }
         log.info("done - KotlinInside")
     }
 }
