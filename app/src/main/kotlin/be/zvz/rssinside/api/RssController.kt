@@ -28,10 +28,10 @@ class RssController @Autowired internal constructor() {
         dateFormats.forEach { dateFormat ->
             try {
                 return Calendar.getInstance().apply {
-                    time = dateFormat.parse(dateString)
                     val year = get(Calendar.YEAR)
                     val month = get(Calendar.MONTH)
                     val day = get(Calendar.DAY_OF_MONTH)
+                    time = dateFormat.parse(dateString)
                     set(Calendar.YEAR, year)
                     set(Calendar.MONTH, month)
                     set(Calendar.DAY_OF_MONTH, day)
