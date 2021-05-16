@@ -9,7 +9,6 @@ import com.rometools.rome.feed.rss.Item
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 import java.lang.RuntimeException
 import java.text.ParseException
@@ -28,13 +27,23 @@ class RssController @Autowired internal constructor() {
     private fun tryParseDate(dateString: String): Date {
         dateFormats.forEach { dateFormat ->
             try {
-                return dateFormat.parse(dateString)
+                return Calendar.getInstance().apply {
+                    time = dateFormat.parse(dateString)
+                    val year = get(Calendar.YEAR)
+                    val month = get(Calendar.MONTH)
+                    val day = get(Calendar.DAY_OF_MONTH)
+                    set(Calendar.YEAR, year)
+                    set(Calendar.MONTH, month)
+                    set(Calendar.DAY_OF_MONTH, day)
+                }.time
             } catch (ignored: ParseException) {
             }
         }
         return Date()
     }
 
+    @GetMapping
+    @ResponseBody
     fun getRssList(@PathVariable gallId: String): Channel {
         val articleListRequest = ArticleList(gallId).apply {
             try {
@@ -69,18 +78,6 @@ class RssController @Autowired internal constructor() {
             }
         }
         return channel
-    }
-
-    @GetMapping(path = ["/json"], produces = [MediaType.APPLICATION_JSON_VALUE])
-    @ResponseBody
-    fun getRssListJson(@PathVariable gallId: String): Channel {
-        return getRssList(gallId)
-    }
-
-    @GetMapping(produces = [MediaType.APPLICATION_XML_VALUE])
-    @ResponseBody
-    fun getRssListXml(@PathVariable gallId: String): Channel {
-        return getRssList(gallId)
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
