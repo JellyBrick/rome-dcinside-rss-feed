@@ -37,7 +37,6 @@ class RssController @Autowired internal constructor() {
     @RequestMapping(method = [RequestMethod.GET])
     @ResponseBody
     fun getRssList(@PathVariable gallId: String): Channel {
-        log.info("getRssList")
         val articleListRequest = ArticleList(gallId).apply {
             try {
                 request()
@@ -49,6 +48,7 @@ class RssController @Autowired internal constructor() {
         val galleryInfo = articleListRequest.getGallInfo()
         val channel = Channel("rss_2.0")
         channel.title = galleryInfo.title
+        channel.description = galleryInfo.title
         channel.generator = galleryInfo.title
         channel.link = "https://gall.dcinside.com/list.php?id=$gallId"
         channel.pubDate = Date()
