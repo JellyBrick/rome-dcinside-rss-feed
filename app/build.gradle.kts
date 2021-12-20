@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
     implementation(group = "org.springframework.boot", name = "spring-boot-starter-web")
-    implementation(group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version = "2.13.0")
+    implementation(group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version = "2.13.1")
 
     implementation(group = "be.zvz", name = "KotlinInside", version = "1.10.2")
     implementation(group = "com.rometools", name = "rome", version = "1.16.0")
