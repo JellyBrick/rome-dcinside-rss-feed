@@ -21,7 +21,7 @@ dependencies {
     implementation(group = "org.springframework.boot", name = "spring-boot-starter-web")
     implementation(group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version = "2.13.2")
 
-    implementation(group = "be.zvz", name = "KotlinInside", version = "1.11.2")
+    implementation(group = "be.zvz", name = "KotlinInside", version = "1.12.0")
     implementation(group = "com.rometools", name = "rome", version = "1.18.0")
 
     implementation(group = "org.jetbrains.kotlin", name = "kotlin-reflect")
