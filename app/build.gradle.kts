@@ -22,7 +22,7 @@ dependencies {
     implementation(group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version = "2.14.2")
 
     implementation(group = "be.zvz", name = "KotlinInside", version = "1.14.6")
-    implementation(group = "com.rometools", name = "rome", version = "1.19.0")
+    implementation(group = "com.rometools", name = "rome", version = "2.1.0")
 
     implementation(group = "org.jetbrains.kotlin", name = "kotlin-reflect")
     implementation(group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8")
